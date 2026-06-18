@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Binary Search Visualizer</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    color: white;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #3b0000, #660000, #990000);
+}
+
+/* Floral pattern */
+body::before {
+    content: "";
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.08) 2px, transparent 2px);
+    background-size: 80px 80px;
+    z-index: -1;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+input, button {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+button {
+    background: #ff4d6d;
+    color: white;
+    cursor: pointer;
+}
+
+/* Node (ball) */
+.node {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    padding: 20px;
+    min-width: 60px;
+    text-align: center;
+    margin: 10px;
+    transition: 0.5s;
+    font-weight: bold;
+}
+
+/* Tree layout */
+.tree {
+    display: flex;
+    justify-content: center;
+}
+
+.children {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* WHITE while checking */
+.mid {
+    background: white;
+    color: black;
+    transform: scale(1.2);
+}
+
+/* Path colors */
+.leftPath {
+    background: #4da6ff;
+}
+
+.rightPath {
+    background: #ff944d;
+}
+
+/* DARK GREEN when found */
+.found {
+    background: #006400;
+    color: white;
+}
+
+/* Glow animation */
+.found {
+    animation: glow 1s infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 10px #006400; }
+    to { box-shadow: 0 0 25px #00ff00; }
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌳 Binary Search Splitting</h1>
+
+<input type="text" id="arrayInput" placeholder="Enter numbers (10 20 30 40 50)">
+<br>
+<input type="number" id="keyInput" placeholder="Search number">
+<br>
+<button onclick="start()">Start</button>
+
+<div id="treeContainer"></div>
+<div id="result"></div>
+
+<script>
+function buildTree(arr, l, r) {
+    if (l > r) return null;
+
+    let mid = Math.floor((l + r) / 2);
+
+    return {
+        val: arr[mid],
+        left: buildTree(arr, l, mid - 1),
+        right: buildTree(arr, mid + 1, r)
+    };
+}
+
+function drawTree(node) {
+    if (!node) return "";
+
+    return `
+    <div class="tree">
+        <div>
+            <div class="node" id="node-${node.val}">${node.val}</div>
+            <div class="children">
+                ${drawTree(node.left)}
+                ${drawTree(node.right)}
+            </div>
+        </div>
+    </div>`;
+}
+
+async function search(node, key) {
+    if (!node) return false;
+
+    let el = document.getElementById("node-" + node.val);
+
+    // reset previous styles
+    el.classList.remove("leftPath","rightPath","found");
+
+    // WHITE while checking
+    el.classList.add("mid");
+
+    await new Promise(r => setTimeout(r, 900));
+
+    if (node.val == key) {
+        el.classList.remove("mid");
+        el.classList.add("found");
+        document.getElementById("result").innerHTML = "✅ Found!";
+        return true;
+    }
+
+    el.classList.remove("mid");
+
+    if (key < node.val) {
+        el.classList.add("leftPath");
+        document.getElementById("result").innerHTML = "⬅️ Going LEFT";
+        await new Promise(r => setTimeout(r, 700));
+        return search(node.left, key);
+    } else {
+        el.classList.add("rightPath");
+        document.getElementById("result").innerHTML = "➡️ Going RIGHT";
+        await new Promise(r => setTimeout(r, 700));
+        return search(node.right, key);
+    }
+}
+
+async function start() {
+    let arr = document.getElementById("arrayInput").value.trim().split(" ").map(Number);
+    let key = parseInt(document.getElementById("keyInput").value);
+
+    if(arr.length === 0 || isNaN(key)) {
+        document.getElementById("result").innerHTML = "⚠️ Enter valid input";
+        return;
+    }
+
+    arr.sort((a,b)=>a-b);
+
+    let root = buildTree(arr, 0, arr.length - 1);
+
+    document.getElementById("treeContainer").innerHTML = drawTree(root);
+    document.getElementById("result").innerHTML = "";
+
+    await search(root, key);
+}
+</script>
+
+</body>
+</html>
